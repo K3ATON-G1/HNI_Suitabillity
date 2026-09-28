@@ -782,16 +782,12 @@ server <- function(input, output, session) {
         !is.na(properties$sale_date) &
         properties$sale_date <= cutoff
       
+      qualifies[is.na(qualifies)] <- FALSE
+      
       status <- ifelse(
         qualifies,
         "Legacy",
         "Not Legacy"
-      )
-      
-      point_colors <- ifelse(
-        qualifies,
-        "#218a55",
-        "#c43c3c"
       )
       
       sale_label <- ifelse(
@@ -813,17 +809,38 @@ server <- function(input, output, session) {
         status
       )
       
+      legacy_rows <- which(qualifies)
+      not_legacy_rows <- which(!qualifies)
+      
+      if (length(legacy_rows) > 0) {
+        map <- map |>
+          addCircleMarkers(
+            lng = coordinates[legacy_rows, 1],
+            lat = coordinates[legacy_rows, 2],
+            radius = 4,
+            stroke = FALSE,
+            fillOpacity = 0.7,
+            color = "#218a55",
+            popup = popup[legacy_rows],
+            group = "Legacy"
+          )
+      }
+      
+      if (length(not_legacy_rows) > 0) {
+        map <- map |>
+          addCircleMarkers(
+            lng = coordinates[not_legacy_rows, 1],
+            lat = coordinates[not_legacy_rows, 2],
+            radius = 4,
+            stroke = FALSE,
+            fillOpacity = 0.7,
+            color = "#c43c3c",
+            popup = popup[not_legacy_rows],
+            group = "Not Legacy"
+          )
+      }
+      
       map <- map |>
-        addCircleMarkers(
-          lng = coordinates[, 1],
-          lat = coordinates[, 2],
-          radius = 4,
-          stroke = FALSE,
-          fillOpacity = 0.7,
-          color = point_colors,
-          popup = popup,
-          group = "Properties"
-        ) |>
         addLegend(
           "bottomright",
           colors = c(
@@ -846,6 +863,12 @@ server <- function(input, output, session) {
     
     bounds <- sf::st_bbox(boundaries)
     
+    point_groups <- if (nrow(properties) > 0) {
+      c("Legacy", "Not Legacy")
+    } else {
+      character(0)
+    }
+    
     map |>
       fitBounds(
         bounds[["xmin"]],
@@ -856,8 +879,9 @@ server <- function(input, output, session) {
       addLayersControl(
         overlayGroups = c(
           "Selected neighborhoods",
-          "Properties"
+          point_groups
         ),
+        position = "bottomright",
         options = layersControlOptions(
           collapsed = FALSE
         )
