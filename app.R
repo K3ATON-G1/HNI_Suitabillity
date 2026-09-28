@@ -794,29 +794,18 @@ server <- function(input, output, session) {
         "#c43c3c"
       )
       
+      sale_label <- ifelse(
+        is.na(properties$sale_date),
+        "Unknown",
+        format(properties$sale_date, "%m/%d/%Y")
+      )
+      
       popup <- sprintf(
-        paste0(
-          "<strong>%s</strong><br>",
-          "%s<br>",
-          "Street block: %s<br>",
-          "Address match: %s<br>",
-          "ZIP match: %s<br>",
-          "Homeowner: %s<br>",
-          "%sY: %s"
-        ),
-        
-        htmltools::htmlEscape(
-          as.character(properties$address)
-        ),
-        
-        htmltools::htmlEscape(
-          as.character(properties$neighborhood)
-        ),
-        
-        htmltools::htmlEscape(
-          as.character(properties$street_block)
-        ),
-        
+        "<strong>%s</strong><br>%s<br>Street block: %s<br>Sale date: %s<br>Address match: %s<br>ZIP match: %s<br>Homeowner: %s<br>%sY: %s",
+        htmltools::htmlEscape(as.character(properties$address)),
+        htmltools::htmlEscape(as.character(properties$neighborhood)),
+        htmltools::htmlEscape(as.character(properties$street_block)),
+        sale_label,
         properties$address_match,
         properties$zip_match,
         properties$homeowner,
